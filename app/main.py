@@ -1,7 +1,7 @@
 from fastapi import FastAPI
+from app.routers import telegram, lesson
 
 app = FastAPI()
 
-@app.get("/hello")
-def read_root():
-    return {"Hello": "World"}
+app.include_router(lesson.router)
+app.include_router(telegram.router)
