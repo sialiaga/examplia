@@ -7,3 +7,4 @@ class ExampleCreate(BaseModel):
     texto: str
     imagen_url: Optional[HttpUrl] = None
     slide_actual: int  # viene del bot, calcularemos `slide_destino` = actual + 1
+

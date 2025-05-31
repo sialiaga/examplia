@@ -12,5 +12,6 @@ class Example(Base):
     lesson_id = Column(UUID(as_uuid=True), ForeignKey("lessons.id"), nullable=False)
     texto = Column(Text, nullable=False)
     imagen_url = Column(String, nullable=True)
+    slide_actual = Column(Integer, nullable=False)
     slide_destino = Column(Integer, nullable=False)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
