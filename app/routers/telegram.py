@@ -1,8 +1,11 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
-from app.schemas.example import ExampleCreate
+from app.schemas.example import ExampleCreate, ExampleOut
 from app.crud.example import create_example
 from app.dependencies import get_db
+from uuid import UUID
+from typing import List
+from app.models.example import Example
 
 router = APIRouter()
 
@@ -22,3 +25,9 @@ def recibir_texto_desde_telegram(data: ExampleCreate, db: Session = Depends(get_
         return {"status": "ok", "example_id": str(nuevo.id)}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+    
+
+@router.get("/lessons/{lesson_id}/examples", response_model=List[ExampleOut])
+def listar_ejemplos(lesson_id: UUID, db: Session = Depends(get_db)):
+    ejemplos = db.query(Example).filter(Example.lesson_id == lesson_id).order_by(Example.created_at.asc()).all()
+    return ejemplos
