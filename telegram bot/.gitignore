@@ -1,0 +1,20 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.db
+*.sqlite3
+
+# Entornos virtuales
+venv/
+env/
+
+# Archivos de configuración secretos
+.env
+
+# Archivos de imágenes generadas
+diagrams/
+
+# Otros
+.DS_Store
