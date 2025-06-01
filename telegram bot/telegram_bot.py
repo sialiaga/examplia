@@ -9,10 +9,13 @@ BOT_TOKEN = '7907047504:AAHAx_Z52EN0zjd-V0-GVWjcddaVHgSdKjw'
 model = whisper.load_model("base")
 custom_keyboard = ReplyKeyboardMarkup(
     keyboard=[["⬆️ Subir", "⬇️ Bajar"]],
-    resize_keyboard=True,          # Adjusts to fit screen
-    one_time_keyboard=False,       # Always visible
+    resize_keyboard=True,
+    one_time_keyboard=False,
     input_field_placeholder="Presiona un botón o envía un audio"
 )
+
+async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    await update.message.reply_text("Para iniciar escribe /inicio")
 
 async def show_keyboard(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text(
@@ -24,14 +27,16 @@ async def handle_button_press(update: Update, context: ContextTypes.DEFAULT_TYPE
     msg = update.message.text
 
     if msg == "⬆️ Subir":
-        await update.message.reply_text("📈 Subiendo contenido")
+        #Esto es por ahora, para testing
+        await update.message.reply_text("⬆️ Subiendo presentacion")
     elif msg == "⬇️ Bajar":
-        await update.message.reply_text("📉 Bajando contenido")
+        #Esto es por ahora, para testing
+        await update.message.reply_text("📉 Bajando presentacion")
     else:
+        #Esto es por ahora, para testing
         await update.message.reply_text("Comando no reconocido")
-    print(msg)
+    print(msg)# Aqui va a ir la conexcion a el fast api que enviara la informacion
 
-# Handle voice messages
 async def handle_voice(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = update.message.from_user.id
     file = await context.bot.get_file(update.message.voice.file_id)
@@ -58,18 +63,17 @@ async def handle_voice(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await update.message.reply_text("No se pudo enviar la transcripción al servidor.")
 
 
-    # Here: transcribe and trigger action
-    await update.message.reply_text("Audio recibido, procesando...")
+    await update.message.reply_text("🎧 Audio recibido")
     os.remove(path)
 
 def main():
     app = ApplicationBuilder().token(BOT_TOKEN).build()
-
-    app.add_handler(CommandHandler("start", show_keyboard))  # Send keyboard on /start
+    app.add_handler(CommandHandler("start", start)) 
+    app.add_handler(CommandHandler("inicio", show_keyboard))
     app.add_handler(MessageHandler(filters.TEXT & (~filters.COMMAND), handle_button_press))
     app.add_handler(MessageHandler(filters.VOICE, handle_voice))
 
-    print("Bot listo ✅")
+    print("Bot listo")
     app.run_polling()
 
 if __name__ == "__main__":
