@@ -46,17 +46,3 @@ La API de Examplia ofrece los siguientes endpoints:
 
 - `POST /handshake/` - Verificar conexión de usuario
 - `POST /instruction/` - Enviar instrucciones (explain/move) a un usuario conectado
-
-## Comandos importantes
-
-### Comando para comenzar la api en local
-
-```bash
-python -m uvicorn app.main:app --reload
-```
- 
-### Comando para poblar la tabla de objetivos de aprendizaje (OAs) con los del curriculum nacional
-
-```bash
-python app\scripts\import_oas.py --file app\uploadable_files\oas.xlsx
-```
