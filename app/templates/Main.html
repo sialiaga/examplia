@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Examplia - Lessons</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+
+    body {
+      background: linear-gradient(to right, #4facfe, #00f2fe);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 30px 20px;
+    }
+
+    .header {
+      text-align: center;
+      margin-bottom: 30px;
+    }
+
+    .logo {
+      font-size: 28px;
+      font-weight: bold;
+      color: #0077cc;
+    }
+
+    .subtitle {
+      color: #333;
+      margin-top: 10px;
+    }
+
+    .lesson-list {
+      width: 100%;
+      max-width: 600px;
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+    }
+
+    .lesson-card {
+      background-color: #fff;
+      padding: 15px 20px;
+      border-radius: 10px;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+    }
+
+    .lesson-card:hover {
+      background-color: #e6f2ff;
+    }
+
+    .lesson-title {
+      font-size: 18px;
+      font-weight: bold;
+      color: #0077cc;
+    }
+
+    .lesson-subtitle {
+      color: #666;
+      font-size: 14px;
+    }
+
+    .view-button {
+      margin-top: 10px;
+      display: inline-block;
+      padding: 6px 12px;
+      background-color: #0077cc;
+      color: white;
+      text-decoration: none;
+      border-radius: 6px;
+      font-size: 14px;
+    }
+
+    .view-button:hover {
+      background-color: #005fa3;
+    }
+
+    .create-button {
+      position: fixed;
+      bottom: 30px;
+      right: 30px;
+      background-color: #0077cc;
+      color: white;
+      border: none;
+      border-radius: 50%;
+      width: 60px;
+      height: 60px;
+      font-size: 28px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+    }
+
+    /* Modal Styles */
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0,0,0,0.5);
+      z-index: 999;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .modal {
+      background-color: white;
+      width: 90%;
+      max-width: 500px;
+      padding: 25px;
+      border-radius: 12px;
+      position: relative;
+    }
+
+    .modal h3 {
+      margin-bottom: 20px;
+      color: #0077cc;
+    }
+
+    .form-group {
+      margin-bottom: 15px;
+    }
+
+    label {
+      display: block;
+      margin-bottom: 5px;
+      color: #333;
+    }
+
+    input[type="text"],
+    input[type="file"],
+    textarea {
+      width: 100%;
+      padding: 10px;
+      border-radius: 6px;
+      border: 1px solid #ccc;
+      resize: vertical;
+    }
+
+    input:focus,
+    textarea:focus {
+      border-color: #0077cc;
+      outline: none;
+    }
+
+    .button-group {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 20px;
+    }
+
+    .button-group button {
+      padding: 10px 20px;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-weight: bold;
+    }
+
+    .submit-btn {
+      background-color: #0077cc;
+      color: white;
+    }
+
+    .cancel-btn {
+      background-color: #ccc;
+      color: #333;
+    }
+
+    .submit-btn:hover {
+      background-color: #005fa3;
+    }
+
+    .cancel-btn:hover {
+      background-color: #bbb;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="header">
+    <div class="logo">🎓 Examplia</div>
+    <p class="subtitle">Your Learning Dashboard</p>
+  </div>
+
+  <!-- Lesson List -->
+  <div class="lesson-list" id="lessonList">
+    <!-- Lessons will be injected here -->
+  </div>
+
+  <!-- Floating Create Button -->
+  <button class="create-button" onclick="openModal()">+</button>
+
+  <!-- Modal for Creating New Lesson -->
+  <div class="modal-overlay" id="modalOverlay">
+    <div class="modal">
+      <h3>Create New Lesson</h3>
+      <form id="lessonForm">
+        <div class="form-group">
+          <label for="name">Name</label>
+          <input type="text" id="name" required />
+        </div>
+        <div class="form-group">
+          <label for="subject">Subject</label>
+          <input type="text" id="subject" required />
+        </div>
+        <div class="form-group">
+          <label for="unit">Unit</label>
+          <input type="text" id="unit" required />
+        </div>
+        <div class="form-group">
+          <label for="code">Code</label>
+          <input type="text" id="code" required />
+        </div>
+        <div class="form-group">
+          <label for="description">Description</label>
+          <textarea id="description" rows="3" required></textarea>
+        </div>
+        <div class="form-group">
+          <label for="context">Context</label>
+          <textarea id="context" rows="3" required></textarea>
+        </div>
+        <div class="form-group">
+          <label for="file">Upload File</label>
+          <input type="file" id="file" />
+        </div>
+        <div class="button-group">
+          <button type="button" class="cancel-btn" onclick="closeModal()">Cancel</button>
+          <button type="submit" class="submit-btn">Save Lesson</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script>
+
+    const defaultLessons = [
+      { id: 1, name: "Introduction to Algebra", subject: "Mathematics" },
+      { id: 2, name: "The Scientific Method", subject: "Science" },
+      { id: 3, name: "World History Overview", subject: "History" }
+    ];
+
+    const lessonList = document.getElementById('lessonList');
+
+    function loadLessons() {
+      lessonList.innerHTML = '';
+      defaultLessons.forEach(lesson => {
+        const card = document.createElement('div');
+        card.className = 'lesson-card';
+        card.innerHTML = `
+          <div class="lesson-title">${lesson.name}</div>
+          <div class="lesson-subtitle">Subject: ${lesson.subject}</div>
+          <a href="/lesson.html?id=${lesson.id}" class="view-button">View</a>
+        `;
+        lessonList.appendChild(card);
+      });
+    }
+
+    const modalOverlay = document.getElementById('modalOverlay');
+
+    function openModal() {
+      modalOverlay.style.display = 'flex';
+    }
+
+    function closeModal() {
+      modalOverlay.style.display = 'none';
+    }
+
+    // New lesson Form Submission
+    const lessonForm = document.getElementById('lessonForm');
+    lessonForm.addEventListener('submit', function(e) {
+      e.preventDefault();
+
+      const formData = {
+        name: document.getElementById('name').value,
+        subject: document.getElementById('subject').value,
+        unit: document.getElementById('unit').value,
+        code: document.getElementById('code').value,
+        description: document.getElementById('description').value,
+        context: document.getElementById('context').value,
+        file: document.getElementById('file').files[0]?.name || null
+      };
+
+      console.log("Would send to /lessons endpoint:", formData);
+      alert("Lesson saved locally. Would send to API in production.");
+      // Reemplazar para interactuar con backend
+
+      lessonForm.reset();
+      closeModal();
+
+      defaultLessons.push({
+        id: defaultLessons.length + 1,
+        name: formData.name,
+        subject: formData.subject
+      });
+
+      loadLessons();
+    });
+
+    
+    loadLessons();
+  </script>
+
+</body>
+</html>

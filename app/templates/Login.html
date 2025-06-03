@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Examplia - Login / Register</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+
+    body {
+      background: linear-gradient(to right, #4facfe, #00f2fe);
+      height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .container {
+      background-color: #ffffff;
+      width: 100%;
+      max-width: 400px;
+      padding: 30px;
+      border-radius: 15px;
+      box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+    }
+
+    h2 {
+      text-align: center;
+      color: #0077cc;
+      margin-bottom: 20px;
+    }
+
+    .form-group {
+      margin-bottom: 15px;
+    }
+
+    label {
+      display: block;
+      margin-bottom: 5px;
+      color: #333;
+    }
+
+    input[type="text"],
+    input[type="email"],
+    input[type="password"] {
+      width: 100%;
+      padding: 10px;
+      border-radius: 8px;
+      border: 1px solid #ccc;
+      transition: border-color 0.3s ease;
+    }
+
+    input:focus {
+      border-color: #0077cc;
+      outline: none;
+    }
+
+    button {
+      width: 100%;
+      padding: 12px;
+      background-color: #0077cc;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 16px;
+      margin-top: 10px;
+    }
+
+    button:hover {
+      background-color: #005fa3;
+    }
+
+    .toggle-link {
+      text-align: center;
+      margin-top: 15px;
+    }
+
+    .toggle-link a {
+      color: #0077cc;
+      text-decoration: none;
+      cursor: pointer;
+    }
+
+    .toggle-link a:hover {
+      text-decoration: underline;
+    }
+
+    .hidden {
+      display: none;
+    }
+
+    .header {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+
+    .logo {
+      font-size: 24px;
+      font-weight: bold;
+      color: #0077cc;
+    }
+  </style>
+</head>
+<body>
+
+<div class="container" id="auth-container">
+  <div class="header">
+    <div class="logo">🎓 Examplia</div>
+    <p>Educational Excellence Starts Here</p>
+  </div>
+
+  <!-- Login  -->
+  <form id="login-form">
+    <h2>Login</h2>
+    <div class="form-group">
+      <label for="login-email">Email</label>
+      <input type="email" id="login-email" required />
+    </div>
+    <div class="form-group">
+      <label for="login-password">Password</label>
+      <input type="password" id="login-password" required />
+    </div>
+    <button type="submit">Login</button>
+    <div class="toggle-link">
+      Don't have an account? <a onclick="showRegister()">Register</a>
+    </div>
+  </form>
+
+  <!-- Register  -->
+  <form id="register-form" class="hidden">
+    <h2>Register</h2>
+    <div class="form-group">
+      <label for="register-name">First Name</label>
+      <input type="text" id="register-name" required />
+    </div>
+    <div class="form-group">
+      <label for="register-lastname">Last Name</label>
+      <input type="text" id="register-lastname" required />
+    </div>
+    <div class="form-group">
+      <label for="register-email">Email</label>
+      <input type="email" id="register-email" required />
+    </div>
+    <div class="form-group">
+      <label for="register-password">Password</label>
+      <input type="password" id="register-password" required />
+    </div>
+    <button type="submit">Register</button>
+    <div class="toggle-link">
+      Already have an account? <a onclick="showLogin()">Login</a>
+    </div>
+  </form>
+</div>
+
+<script>
+  const loginForm = document.getElementById('login-form');
+  const registerForm = document.getElementById('register-form');
+
+  function showRegister() {
+    loginForm.classList.add('hidden');
+    registerForm.classList.remove('hidden');
+  }
+
+  function showLogin() {
+    registerForm.classList.add('hidden');
+    loginForm.classList.remove('hidden');
+  }
+
+  // Handle login
+  loginForm.addEventListener('submit', function(e) {
+    e.preventDefault();
+    const email = document.getElementById('login-email').value;
+    const password = document.getElementById('login-password').value;
+
+    alert(`Logging in with:\nEmail: ${email}`);
+    // Reemplazar para interactuar con backend
+  });
+
+  // Handle register 
+  registerForm.addEventListener('submit', function(e) {
+    e.preventDefault();
+    const name = document.getElementById('register-name').value;
+    const lastName = document.getElementById('register-lastname').value;
+    const email = document.getElementById('register-email').value;
+    const password = document.getElementById('register-password').value;
+
+    alert(`Registration successful for:\nName: ${name} ${lastName}\nEmail: ${email}`);
+    // Reemplazar para interactuar con backend
+    showLogin();
+  });
+</script>
+
+</body>
+</html>

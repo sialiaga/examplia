@@ -51,6 +51,13 @@ def obtener_oas(lesson_id: UUID, db: Session = Depends(get_db)):
 def listar_lecciones(db: Session = Depends(get_db)):
     return db.query(Lesson).all()
 
+@router.get("/{lesson_id}", response_model=LessonOut)
+def obtener_leccion(lesson_id: UUID, db: Session = Depends(get_db)):
+    leccion = db.query(Lesson).filter(Lesson.id == lesson_id).first()
+    if not leccion:
+        raise HTTPException(status_code=404, detail="Lesson not found")
+    return leccion
+
 @router.get("/oas/", response_model=List[OAOut])
 def listar_oas(db: Session = Depends(get_db)):
     return db.query(OA).all()
