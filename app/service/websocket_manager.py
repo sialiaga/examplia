@@ -12,6 +12,7 @@ class WebSocketManager:
         """
         Verifica si un cliente con el ID de conexión dado está actualmente conectado.
         """
+
         return connection_id in self.active_websockets
 
     async def connect(self, websocket: WebSocket, lesson_id: Any, connection_id: str):
@@ -21,6 +22,7 @@ class WebSocketManager:
         await websocket.accept()
         # Almacenamos un diccionario que contiene el objeto WebSocket y el lesson_id asociado
         self.active_websockets[connection_id] = {"websocket": websocket, "lesson_id": lesson_id}
+        print(self.active_websockets)
         print(f"Nuevo cliente conectado: {connection_id} (Lección: {lesson_id}). Conexiones activas: {len(self.active_websockets)}")
 
     async def disconnect(self, connection_id: str):
@@ -45,7 +47,7 @@ class WebSocketManager:
             websocket = connection_data["websocket"]
             try:
                 await websocket.send_text(message)
-                # print(f"Mensaje enviado a {connection_id}: {message}") # Descomenta para más logs
+                print(f"Mensaje enviado a {connection_id}: {message}") # Descomenta para más logs
                 return True
             except RuntimeError as e:
                 print(f"Error al enviar a WebSocket {connection_id} (probablemente cerrado): {e}")
