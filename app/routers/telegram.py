@@ -33,7 +33,7 @@ async def read_users(data: InstructionMessage):
             detail="User not connected or unauthorized."
         )
 
-    response_payload = {"action": data.action, "desc": ""}
+    response_payload = data.action + ":"
 
     # 2. Action Handling
     if data.action == "explain":
@@ -42,7 +42,7 @@ async def read_users(data: InstructionMessage):
             # For now, using a placeholder.
             # gpt_response = await call_gpt_api(data.desc) 
             gpt_response = "This is a pending GPT explanation." 
-            response_payload["desc"] = gpt_response
+            response_payload += gpt_response
         except Exception as e:
             # Log the error for debugging purposes
             print(f"Error calling GPT API: {e}") 
@@ -57,7 +57,7 @@ async def read_users(data: InstructionMessage):
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="Invalid 'move' operation. 'desc' must be 'next' or 'prev'."
             )
-        response_payload["desc"] = data.desc
+        response_payload += data.desc
     
     await websocket_manager.send_personal_message(response_payload, data.id)
 
