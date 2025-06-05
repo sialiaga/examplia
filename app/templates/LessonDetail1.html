@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>{{ lesson.name }} - Examplia</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+
+    body {
+      background: linear-gradient(to right, #4facfe, #00f2fe);
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 40px 20px;
+    }
+
+    .container {
+      background-color: white;
+      max-width: 700px;
+      width: 100%;
+      padding: 30px;
+      border-radius: 15px;
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+    }
+
+    .header {
+      text-align: center;
+      margin-bottom: 30px;
+    }
+
+    .logo {
+      font-size: 28px;
+      font-weight: bold;
+      color: #0077cc;
+    }
+
+    h2 {
+      color: #0077cc;
+      margin-bottom: 10px;
+    }
+
+    .lesson-info {
+      margin-bottom: 20px;
+    }
+
+    .lesson-label {
+      font-weight: bold;
+      margin-top: 10px;
+      color: #555;
+    }
+
+    .lesson-value {
+      margin-left: 10px;
+      color: #333;
+    }
+
+    .back-link {
+      display: inline-block;
+      margin-top: 20px;
+      color: #0077cc;
+      text-decoration: none;
+    }
+
+    .back-link:hover {
+      text-decoration: underline;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <div class="header">
+      <div class="logo">🎓 Examplia</div>
+      <h2>{{ lesson.name }}</h2>
+    </div>
+
+    <div class="lesson-info">
+      <div class="lesson-label">Subject:</div>
+      <div class="lesson-value">{{ lesson.subject }}</div>
+
+      <div class="lesson-label">Course:</div>
+      <div class="lesson-value">{{ lesson.course }}</div>
+
+      <div class="lesson-label">Description:</div>
+      <div class="lesson-value">{{ lesson.description }}</div>
+
+      <div class="lesson-label">Context:</div>
+      <div class="lesson-value">{{ lesson.context }}</div>
+
+      {% if lesson.file_path %}
+      <div class="lesson-label">File Path:</div>
+      <div class="lesson-value"><a href="{{ lesson.file_path }}" target="_blank">Download File</a></div>
+      {% else %}
+      <div class="lesson-label">File:</div>
+      <div class="lesson-value">No file uploaded</div>
+      {% endif %}
+    </div>
+
+    <a href="/frontend/home" class="back-link">&larr; Back to Lessons</a>
+  </div>
+
+</body>
+</html>

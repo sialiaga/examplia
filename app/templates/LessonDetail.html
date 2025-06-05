@@ -17,7 +17,7 @@
       min-height: 100vh;
       display: flex;
       justify-content: center;
-      align-items: center;
+      align-items: start;
       padding: 40px 20px;
     }
 
@@ -46,19 +46,39 @@
       margin-bottom: 10px;
     }
 
-    .lesson-info {
-      margin-bottom: 20px;
+    .section {
+      margin-bottom: 30px;
     }
 
-    .lesson-label {
+    .label {
       font-weight: bold;
       margin-top: 10px;
       color: #555;
     }
 
-    .lesson-value {
+    .value {
       margin-left: 10px;
       color: #333;
+    }
+
+    select, input[type="file"], button {
+      margin-top: 10px;
+      width: 100%;
+      padding: 8px;
+      border-radius: 6px;
+      border: 1px solid #ccc;
+    }
+
+    button {
+      background-color: #0077cc;
+      color: white;
+      cursor: pointer;
+      border: none;
+      font-weight: bold;
+    }
+
+    button:hover {
+      background-color: #005fa3;
     }
 
     .back-link {
@@ -71,6 +91,29 @@
     .back-link:hover {
       text-decoration: underline;
     }
+
+    .oa-list {
+      margin-top: 10px;
+    }
+
+    .oa-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background-color: #f9f9f9;
+      padding: 10px;
+      border-radius: 6px;
+      margin-bottom: 10px;
+    }
+
+    .oa-code {
+      font-weight: bold;
+    }
+
+    .oa-desc {
+      font-size: 14px;
+      color: #555;
+    }
   </style>
 </head>
 <body>
@@ -81,30 +124,192 @@
       <h2>{{ lesson.name }}</h2>
     </div>
 
-    <div class="lesson-info">
-      <div class="lesson-label">Subject:</div>
-      <div class="lesson-value">{{ lesson.subject }}</div>
+    <!-- Lesson Info -->
+    <div class="section">
+      <div class="label">Subject:</div>
+      <div class="value">{{ lesson.subject }}</div>
 
-      <div class="lesson-label">Course:</div>
-      <div class="lesson-value">{{ lesson.course }}</div>
+      <div class="label">Course:</div>
+      <div class="value">{{ lesson.course }}</div>
 
-      <div class="lesson-label">Description:</div>
-      <div class="lesson-value">{{ lesson.description }}</div>
+      <div class="label">Description:</div>
+      <div class="value">{{ lesson.description }}</div>
 
-      <div class="lesson-label">Context:</div>
-      <div class="lesson-value">{{ lesson.context }}</div>
+      <div class="label">Context:</div>
+      <div class="value">{{ lesson.context }}</div>
 
       {% if lesson.file_path %}
-      <div class="lesson-label">File Path:</div>
-      <div class="lesson-value"><a href="{{ lesson.file_path }}" target="_blank">Download File</a></div>
+      <div class="label">File:</div>
+      <div class="value"><a href="{{ lesson.file_path }}" target="_blank">Download File</a></div>
       {% else %}
-      <div class="lesson-label">File:</div>
-      <div class="lesson-value">No file uploaded</div>
+      <div class="label">File:</div>
+      <div class="value">No file uploaded</div>
       {% endif %}
+    </div>
+
+    <!-- Assigned OAs -->
+    <div class="section">
+      <h3>Assigned Learning Objectives (OAs)</h3>
+      <div id="oaList" class="oa-list">
+        <!-- Assigned OAs will appear here -->
+      </div>
+    </div>
+
+    <!-- Add New OA -->
+    <div class="section">
+      <h3>Add New OA</h3>
+      <form id="assignOaForm">
+        <label class="label" for="oaSelect">Select an OA:</label>
+        <select id="oaSelect" required>
+          <option value="">-- Select an OA --</option>
+        </select>
+        <button type="submit">Assign OA</button>
+      </form>
+    </div>
+
+    <!-- Upload File -->
+    <div class="section">
+      <h3>Upload File</h3>
+      <form id="uploadFileForm">
+        <label class="label" for="fileInput">Choose a file:</label>
+        <input type="file" id="fileInput" required />
+        <button type="submit">Upload File</button>
+      </form>
     </div>
 
     <a href="/frontend/home" class="back-link">&larr; Back to Lessons</a>
   </div>
+
+  <script>
+    const lessonId = "{{ lesson.id }}";
+    const oaListContainer = document.getElementById("oaList");
+
+    // Load assigned OAs for this lesson
+    async function loadAssignedOAs() {
+      try {
+        const res = await fetch(`/lessons/${lessonId}/oas`);
+        const oas = await res.json();
+        console.log("Assigned OAs:", oas);
+        oaListContainer.innerHTML = "";
+
+        if (!oas.length) {
+          oaListContainer.innerHTML = "<p>No OAs assigned yet.</p>";
+          return;
+        }
+
+        oas.forEach(oa => {
+          const div = document.createElement("div");
+          div.className = "oa-item";
+
+          div.innerHTML = `
+            <div>
+              <div class="oa-code">${oa.codigo}</div>
+              <div class="oa-desc">${oa.description}</div>
+            </div>
+            <button onclick='removeOA("${oa.id}")'>Remove</button>
+          `;
+
+          oaListContainer.appendChild(div);
+        });
+      } catch (err) {
+        console.error("Error loading OAs:", err);
+        oaListContainer.innerHTML = "<p>Error loading OAs.</p>";
+      }
+    }
+
+    // Load all available OAs into dropdown
+    async function loadAvailableOAs() {
+      try {
+        const res = await fetch("/lessons/json/oas");
+        const allOAs = await res.json();
+        console.log("Available OAs:", allOAs);
+        const oaSelect = document.getElementById("oaSelect");
+
+        oaSelect.innerHTML = '<option value="">-- Select an OA --</option>';
+
+        allOAs.forEach(oa => {
+          const option = document.createElement("option");
+          option.value = oa.id;
+          option.textContent = `${oa.codigo} - ${oa.description}`;
+          oaSelect.appendChild(option);
+        });
+      } catch (err) {
+        console.error("Error fetching OAs:", err);
+      }
+    }
+
+    // Assign OA
+    document.getElementById("assignOaForm").onsubmit = async (e) => {
+      e.preventDefault();
+      const selectedOaId = document.getElementById("oaSelect").value;
+
+      if (!selectedOaId) {
+        alert("Please select an OA.");
+        return;
+      }
+
+      console.log("Assigning OA ID:", selectedOaId);
+
+      // TODO: Replace with real endpoint
+       await fetch("/lessons/oas", {
+         method: "POST",
+         headers: { "Content-Type": "application/json" },
+         body: JSON.stringify({ lesson_id: lessonId, oa_id: selectedOaId })
+       });
+
+      alert("OA assigned successfully!");
+      loadAssignedOAs(); // Refresh list
+      document.getElementById("oaSelect").value = "";
+    };
+
+    // Remove OA
+    window.removeOA = async (oaId) => {
+      if (!confirm("Are you sure you want to remove this OA?")) return;
+
+      console.log("Removing OA ID:", oaId);
+
+      // TODO: Uncomment when DELETE endpoint is ready
+       await fetch("/lessons/oas", {
+         method: "DELETE",
+         headers: { "Content-Type": "application/json" },
+         body: JSON.stringify({ lesson_id: lessonId, oa_id: oaId })
+       });
+
+      alert("OA removed successfully!");
+      loadAssignedOAs(); // Refresh list
+    };
+
+    // Upload File
+    document.getElementById("uploadFileForm").onsubmit = async (e) => {
+      e.preventDefault();
+      const fileInput = document.getElementById("fileInput");
+      const file = fileInput.files[0];
+
+      if (!file) {
+        alert("Please select a file.");
+        return;
+      }
+
+      console.log("Uploading file:", file.name);
+
+      // TODO: Replace with real endpoint
+      // const formData = new FormData();
+      // formData.append("file", file);
+      // await fetch(`/lessons/${lessonId}/upload`, {
+      //   method: "POST",
+      //   body: formData
+      // });
+
+      alert("File uploaded successfully!");
+      fileInput.value = "";
+    };
+
+    // Initial load
+    window.onload = () => {
+      loadAssignedOAs();
+      loadAvailableOAs();
+    };
+  </script>
 
 </body>
 </html>

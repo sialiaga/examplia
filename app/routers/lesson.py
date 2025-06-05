@@ -14,6 +14,23 @@ import os
 
 router = APIRouter(prefix="/lessons", tags=["lessons"])
 
+#test function to get all oas
+@router.get("/json/oas", response_model=None)
+def test_get_oas(db: Session = Depends(get_db)):
+    oas = db.query(OA).all()
+    # Convert to list of dictionaries with curso: str asignatura: str unidad: str codigo: str description: str
+    oas_list = [
+        {
+            "id": str(oa.id),
+            "curso": oa.curso,
+            "asignatura": oa.asignatura,
+            "unidad": oa.unidad,
+            "codigo": oa.codigo,
+            "description": oa.description
+        } for oa in oas
+    ]
+    return oas_list
+
 @router.post("/", response_model=LessonOut)
 def crear_leccion(lesson: LessonCreate, db: Session = Depends(get_db)):
     nueva = Lesson(**lesson.dict())
@@ -26,6 +43,20 @@ def crear_leccion(lesson: LessonCreate, db: Session = Depends(get_db)):
 def asociar_oa(data: LessonOACreate, db: Session = Depends(get_db)):
     link = LessonOA(lesson_id=data.lesson_id, oa_id=data.oa_id)
     db.add(link)
+    db.commit()
+    return {"status": "ok"}
+
+@router.delete("/oas", response_model=None)
+def eliminar_asociacion_oa(data: LessonOACreate, db: Session = Depends(get_db)):
+    link = db.query(LessonOA).filter(
+        LessonOA.lesson_id == data.lesson_id,
+        LessonOA.oa_id == data.oa_id
+    ).first()
+    
+    if not link:
+        raise HTTPException(status_code=404, detail="Association not found")
+    
+    db.delete(link)
     db.commit()
     return {"status": "ok"}
 
