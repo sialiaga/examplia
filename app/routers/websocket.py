@@ -56,9 +56,8 @@ async def test_websocket_action(
             detail=f"User with ID '{connection_id}' not connected."
         )
 
-    response_payload = action + ":"
+    response_payload = {"accion": action}
 
-    # 2. Action Handling (Faked Logic)
     if action == "explain":
         try:
             # --- FAKED GPT API CALL ---
@@ -66,7 +65,7 @@ async def test_websocket_action(
                 gpt_response = f"This is a faked explanation for: '{desc}'. (AI Mock)"
             else:
                 gpt_response = "This is a faked general explanation. (AI Mock)"
-            response_payload += gpt_response
+            response_payload["contenido"] = gpt_response
             # --- END FAKED GPT API CALL ---
 
         except Exception as e:
@@ -83,7 +82,7 @@ async def test_websocket_action(
                 detail="Invalid 'move' operation. 'desc' must be 'next' or 'prev'."
             )
         # --- FAKED MOVE LOGIC ---
-        response_payload += desc
+        response_payload["contenido"] = desc
         # --- END FAKED MOVE LOGIC ---
 
     else:
@@ -93,8 +92,6 @@ async def test_websocket_action(
             detail=f"Unsupported action: '{action}'. Allowed: 'explain', 'move'."
         )
 
-    # 3. Send Response via WebSocket
-    # Es crucial serializar el diccionario a una cadena JSON antes de enviarlo
     await websocket_manager.send_personal_message(json.dumps(response_payload), connection_id)
 
     return {"message": f"Action '{action}' for connection '{connection_id}' successfully executed and response sent via WebSocket."}
