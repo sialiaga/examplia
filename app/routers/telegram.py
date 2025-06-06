@@ -2,6 +2,7 @@ from typing import Literal
 from fastapi import APIRouter, HTTPException, status
 from pydantic import BaseModel
 from ..service.websocket_manager import websocket_manager
+import json
 
 telegram = APIRouter()
 
@@ -33,32 +34,30 @@ async def read_users(data: InstructionMessage):
             detail="User not connected or unauthorized."
         )
 
-    response_payload = data.action + ":"
+    response_payload = {"accion": data.action}
 
-    # 2. Action Handling
     if data.action == "explain":
         try:
             # TODO: Implement actual GPT API call here
             # For now, using a placeholder.
-            # gpt_response = await call_gpt_api(data.desc) 
-            gpt_response = "This is a pending GPT explanation." 
-            response_payload += gpt_response
+            # gpt_response = await call_gpt_api(data.desc)
+            gpt_response = "This is a pending GPT explanation."
+            response_payload["contenido"] = gpt_response
         except Exception as e:
             # Log the error for debugging purposes
-            print(f"Error calling GPT API: {e}") 
+            print(f"Error calling GPT API: {e}")
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                 detail="Failed to get explanation from AI."
             )
-    
     elif data.action == "move":
         if data.desc not in ["next", "prev"]:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="Invalid 'move' operation. 'desc' must be 'next' or 'prev'."
             )
-        response_payload += data.desc
-    
-    await websocket_manager.send_personal_message(response_payload, data.id)
+        response_payload["contenido"] = data.desc
+
+    await websocket_manager.send_personal_message(json.dumps(response_payload), data.id)
 
     return {"message": "Operation successfully"}
