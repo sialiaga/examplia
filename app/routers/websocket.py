@@ -26,7 +26,7 @@ async def ws_connect(websocket: WebSocket, lesson_id: str):
     stop_event = asyncio.Event()
 
     try:
-       await websocket.send_text(f"id:{connection_id}")
+       await websocket.send_text(json.dumps({"accion": "auth", "contenido":connection_id}))
        await stop_event.wait() 
 
     except WebSocketDisconnect:
