@@ -4,7 +4,44 @@ from pydantic import BaseModel
 from ..service.websocket_manager import websocket_manager
 import json
 
+import requests
+import os
+
 telegram = APIRouter()
+pixabay_apikey = os.getenv("pixabay_apikey")
+
+
+def obtener_link_pixabay(texto_busqueda: str, api_key: str) -> str:
+    url_image_to_show = "https://i.pinimg.com/564x/85/f0/53/85f0533df9912c5bd700903a918930c8.jpg"
+    
+    api_url = "https://pixabay.com/api/"
+    params = {
+        'key': api_key,
+        'q': texto_busqueda.split(),
+        'lang': 'es'
+    }
+
+    try:
+        response = requests.get(api_url, params=params)
+        response.raise_for_status() 
+
+        data = response.json()
+
+        if data['hits']:
+            primera_foto = data['hits'][0]
+            url_imagen = primera_foto['webformatURL']
+            url_image_to_show = url_imagen
+        else:
+            print(f"No se encontraron fotos para '{texto_busqueda}' en Pixabay.")
+
+    except requests.exceptions.RequestException as e:
+        print(f"Error al conectar con la API de Pixabay: {e}")
+    
+    except KeyError:
+        print("La respuesta de la API de Pixabay no tiene el formato esperado.")
+
+    return url_image_to_show
+
 
 class authData(BaseModel):
     id: str
@@ -42,11 +79,11 @@ async def read_users(data: InstructionMessage):
             # For now, using a placeholder.
             # gpt_response = await call_gpt_api(data.desc)
             gpt_response = ["Example 1, fake text for example 1", "Example 2, fake text for example 2", "Example 3, fake text for example 3"]
-            gpt_imagen = "iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAABHNCSVQICAgIfAhkiAAAAAlwSFlzAAAApgAAAKYB3X3/OAAAABl0RVh0U29mdHdhcmUAd3d3Lmlua3NjYXBlLm9yZ5vuPBoAAANCSURBVEiJtZZPbBtFFMZ/M7ubXdtdb1xSFyeilBapySVU8h8OoFaooFSqiihIVIpQBKci6KEg9Q6H9kovIHoCIVQJJCKE1ENFjnAgcaSGC6rEnxBwA04Tx43t2FnvDAfjkNibxgHxnWb2e/u992bee7tCa00YFsffekFY+nUzFtjW0LrvjRXrCDIAaPLlW0nHL0SsZtVoaF98mLrx3pdhOqLtYPHChahZcYYO7KvPFxvRl5XPp1sN3adWiD1ZAqD6XYK1b/dvE5IWryTt2udLFedwc1+9kLp+vbbpoDh+6TklxBeAi9TL0taeWpdmZzQDry0AcO+jQ12RyohqqoYoo8RDwJrU+qXkjWtfi8Xxt58BdQuwQs9qC/afLwCw8tnQbqYAPsgxE1S6F3EAIXux2oQFKm0ihMsOF71dHYx+f3NND68ghCu1YIoePPQN1pGRABkJ6Bus96CutRZMydTl+TvuiRW1m3n0eDl0vRPcEysqdXn+jsQPsrHMquGeXEaY4Yk4wxWcY5V/9scqOMOVUFthatyTy8QyqwZ+kDURKoMWxNKr2EeqVKcTNOajqKoBgOE28U4tdQl5p5bwCw7BWquaZSzAPlwjlithJtp3pTImSqQRrb2Z8PHGigD4RZuNX6JYj6wj7O4TFLbCO/Mn/m8R+h6rYSUb3ekokRY6f/YukArN979jcW+V/S8g0eT/N3VN3kTqWbQ428m9/8k0P/1aIhF36PccEl6EhOcAUCrXKZXXWS3XKd2vc/TRBG9O5ELC17MmWubD2nKhUKZa26Ba2+D3P+4/MNCFwg59oWVeYhkzgN/JDR8deKBoD7Y+ljEjGZ0sosXVTvbc6RHirr2reNy1OXd6pJsQ+gqjk8VWFYmHrwBzW/n+uMPFiRwHB2I7ih8ciHFxIkd/3Omk5tCDV1t+2nNu5sxxpDFNx+huNhVT3/zMDz8usXC3ddaHBj1GHj/As08fwTS7Kt1HBTmyN29vdwAw+/wbwLVOJ3uAD1wi/dUH7Qei66PfyuRj4Ik9is+hglfbkbfR3cnZm7chlUWLdwmprtCohX4HUtlOcQjLYCu+fzGJH2QRKvP3UNz8bWk1qMxjGTOMThZ3kvgLI5AzFfo379UAAAAASUVORK5CYII="
+            url_imagen = obtener_link_pixabay(data.desc, pixabay_apikey)
 
             response_payload["title"] = data.desc
             response_payload["contenido"] = gpt_response
-            response_payload["image"] = gpt_imagen
+            response_payload["image"] = url_imagen
         except Exception as e:
             # Log the error for debugging purposes
             print(f"Error calling GPT API: {e}")
