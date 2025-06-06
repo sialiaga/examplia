@@ -104,7 +104,7 @@ def obtener_lecciones_de_oa(oa_id: str, db: Session = Depends(get_db)):
     return resultados
 
 @router.post("/{lesson_id}/upload-slide")
-async def upload_slide(lesson_id: UUID, file: UploadFile = File(...), db: Session = Depends(get_db)):
+async def upload_slide(lesson_id: UUID, file: UploadFile = File(...), db: Session = Depends(get_db)):   
     # Validate file type
     if file.content_type not in ["application/pdf", "application/vnd.ms-powerpoint", "application/vnd.openxmlformats-officedocument.presentationml.presentation"]:
         raise HTTPException(status_code=400, detail="File must be a PDF or PPTX")
@@ -131,3 +131,39 @@ async def upload_slide(lesson_id: UUID, file: UploadFile = File(...), db: Sessio
     db.commit()
 
     return {"message": "File uploaded and associated with lesson"}
+
+@router.get("/{lesson_id}/slide")
+async def get_slide(lesson_id: UUID, db: Session = Depends(get_db)):
+    lesson = db.query(Lesson).filter(Lesson.id == lesson_id).first()
+    if not lesson or not lesson.lesson_file_path:
+        raise HTTPException(status_code=404, detail="Slide not found")
+
+    # Resolve absolute path for serving
+    BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+    STATIC_DIR = os.path.join(BASE_DIR, "..", "..", "static", "lesson_files")
+    file_path = os.path.join(STATIC_DIR, os.path.basename(lesson.lesson_file_path))
+
+    if not os.path.exists(file_path):
+        raise HTTPException(status_code=404, detail="Slide file does not exist")
+
+    return {"file_path": lesson.lesson_file_path}
+
+@router.delete("/{lesson_id}/slide")
+async def delete_slide(lesson_id: UUID, db: Session = Depends(get_db)):
+    lesson = db.query(Lesson).filter(Lesson.id == lesson_id).first()
+    if not lesson or not lesson.lesson_file_path:
+        raise HTTPException(status_code=404, detail="Slide not found")
+
+    # Resolve absolute path for deletion
+    BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+    STATIC_DIR = os.path.join(BASE_DIR, "..", "..", "static", "lesson_files")
+    file_path = os.path.join(STATIC_DIR, os.path.basename(lesson.lesson_file_path))
+
+    if os.path.exists(file_path):
+        os.remove(file_path)
+
+    # Clear the file path in the database
+    lesson.lesson_file_path = None
+    db.commit()
+
+    return {"message": "Slide deleted successfully"}

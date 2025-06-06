@@ -61,7 +61,9 @@
       color: #333;
     }
 
-    select, input[type="file"], button {
+    select,
+    input[type="file"],
+    button {
       margin-top: 10px;
       width: 100%;
       padding: 8px;
@@ -81,14 +83,20 @@
       background-color: #005fa3;
     }
 
-    .back-link {
+    .back-link,
+    .teach-button {
       display: inline-block;
       margin-top: 20px;
       color: #0077cc;
       text-decoration: none;
     }
 
-    .back-link:hover {
+    .teach-button {
+      font-weight: bold;
+    }
+
+    .back-link:hover,
+    .teach-button:hover {
       text-decoration: underline;
     }
 
@@ -114,6 +122,14 @@
       font-size: 14px;
       color: #555;
     }
+
+    .current-file {
+      margin-top: 10px;
+      padding: 10px;
+      background-color: #f0f8ff;
+      border: 1px solid #cce0ff;
+      border-radius: 6px;
+    }
   </style>
 </head>
 <body>
@@ -137,22 +153,12 @@
 
       <div class="label">Context:</div>
       <div class="value">{{ lesson.context }}</div>
-
-      {% if lesson.file_path %}
-      <div class="label">File:</div>
-      <div class="value"><a href="{{ lesson.file_path }}" target="_blank">Download File</a></div>
-      {% else %}
-      <div class="label">File:</div>
-      <div class="value">No file uploaded</div>
-      {% endif %}
     </div>
 
     <!-- Assigned OAs -->
     <div class="section">
       <h3>Assigned Learning Objectives (OAs)</h3>
-      <div id="oaList" class="oa-list">
-        <!-- Assigned OAs will appear here -->
-      </div>
+      <div id="oaList" class="oa-list"></div>
     </div>
 
     <!-- Add New OA -->
@@ -169,12 +175,22 @@
 
     <!-- Upload File -->
     <div class="section">
-      <h3>Upload File</h3>
+      <h3>Upload Slide File</h3>
+
+      <!-- Show current file -->
+      <div id="fileInfo" class="current-file">Loading file info...</div>
+
+      <!-- Upload Form -->
       <form id="uploadFileForm">
         <label class="label" for="fileInput">Choose a file:</label>
         <input type="file" id="fileInput" required />
         <button type="submit">Upload File</button>
       </form>
+    </div>
+
+    <!-- Start Teaching Button -->
+    <div class="section">
+      <a href="/frontend/lesson/{{ lesson.id }}/teach" class="teach-button">🚀 Start Teaching</a>
     </div>
 
     <a href="/frontend/home" class="back-link">&larr; Back to Lessons</a>
@@ -183,13 +199,14 @@
   <script>
     const lessonId = "{{ lesson.id }}";
     const oaListContainer = document.getElementById("oaList");
+    const fileInfoContainer = document.getElementById("fileInfo");
 
-    // Load assigned OAs for this lesson
+    // Load assigned OAs
     async function loadAssignedOAs() {
       try {
         const res = await fetch(`/lessons/${lessonId}/oas`);
         const oas = await res.json();
-        console.log("Assigned OAs:", oas);
+
         oaListContainer.innerHTML = "";
 
         if (!oas.length) {
@@ -217,12 +234,11 @@
       }
     }
 
-    // Load all available OAs into dropdown
+    // Load available OAs into dropdown
     async function loadAvailableOAs() {
       try {
         const res = await fetch("/lessons/json/oas");
         const allOAs = await res.json();
-        console.log("Available OAs:", allOAs);
         const oaSelect = document.getElementById("oaSelect");
 
         oaSelect.innerHTML = '<option value="">-- Select an OA --</option>';
@@ -250,15 +266,15 @@
 
       console.log("Assigning OA ID:", selectedOaId);
 
-      // TODO: Replace with real endpoint
-       await fetch("/lessons/oas", {
-         method: "POST",
-         headers: { "Content-Type": "application/json" },
-         body: JSON.stringify({ lesson_id: lessonId, oa_id: selectedOaId })
-       });
+      // Replace with real endpoint when ready
+      await fetch("/lessons/oas", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ lesson_id: lessonId, oa_id: selectedOaId })
+      });
 
       alert("OA assigned successfully!");
-      loadAssignedOAs(); // Refresh list
+      loadAssignedOAs();
       document.getElementById("oaSelect").value = "";
     };
 
@@ -268,16 +284,42 @@
 
       console.log("Removing OA ID:", oaId);
 
-      // TODO: Uncomment when DELETE endpoint is ready
-       await fetch("/lessons/oas", {
-         method: "DELETE",
-         headers: { "Content-Type": "application/json" },
-         body: JSON.stringify({ lesson_id: lessonId, oa_id: oaId })
-       });
+      // Uncomment when DELETE endpoint is ready
+      await fetch("/lessons/oas", {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ lesson_id: lessonId, oa_id: oaId })
+      });
 
       alert("OA removed successfully!");
-      loadAssignedOAs(); // Refresh list
+      loadAssignedOAs();
     };
+
+    // Get current file info
+    async function getCurrentFile() {
+      try {
+        const res = await fetch(`/lessons/${lessonId}/slide`);
+
+        if (res.status === 404) {
+          fileInfoContainer.textContent = "No file uploaded.";
+          return null;
+        }
+
+        if (!res.ok) throw new Error("Server error");
+
+        const data = await res.json();
+        console.log("Current file data:", data);
+        const filePath = data.file_path || "";
+        const fileName = filePath.split("/").pop() || "Uploaded file";
+
+        fileInfoContainer.innerHTML = `Current File: <strong>${fileName}</strong>`;
+        return filePath;
+      } catch (err) {
+        console.warn("Error getting current file:", err);
+        fileInfoContainer.textContent = "No file uploaded.";
+        return null;
+      }
+    }
 
     // Upload File
     document.getElementById("uploadFileForm").onsubmit = async (e) => {
@@ -290,24 +332,50 @@
         return;
       }
 
-      console.log("Uploading file:", file.name);
+      try {
+        // Step 1: Try deleting existing file
+        const deleteRes = await fetch(`/lessons/${lessonId}/slide`, {
+          method: "DELETE"
+        });
 
-      // TODO: Replace with real endpoint
-      // const formData = new FormData();
-      // formData.append("file", file);
-      // await fetch(`/lessons/${lessonId}/upload`, {
-      //   method: "POST",
-      //   body: formData
-      // });
+        if (deleteRes.ok) {
+          console.log("Old file deleted");
+        } else if (deleteRes.status !== 404) {
+          const errData = await deleteRes.json();
+          throw new Error(errData.detail || "Failed to delete old file");
+        }
 
-      alert("File uploaded successfully!");
-      fileInput.value = "";
+        // Step 2: Upload new file
+        const formData = new FormData();
+        formData.append("file", file);
+
+        const uploadRes = await fetch(`/lessons/${lessonId}/upload-slide`, {
+          method: "POST",
+          body: formData
+        });
+
+        if (!uploadRes.ok) {
+          const errData = await uploadRes.json();
+          throw new Error(errData.detail || "Upload failed");
+        }
+
+        const result = await uploadRes.json();
+        const fileName = result.filename ? result.filename : file.name;
+        fileInfoContainer.innerHTML = `Current File: <strong>${fileName}</strong>`;
+        alert("New file uploaded successfully!");
+
+        fileInput.value = "";
+      } catch (err) {
+        console.error("Error uploading file:", err);
+        alert("Error uploading file: " + err.message);
+      }
     };
 
     // Initial load
-    window.onload = () => {
+    window.onload = async () => {
       loadAssignedOAs();
       loadAvailableOAs();
+      await getCurrentFile();
     };
   </script>
 

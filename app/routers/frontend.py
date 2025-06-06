@@ -58,3 +58,37 @@ def view_lesson(request: Request, lesson_id: UUID, db: Session = Depends(get_db)
         raise e
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Internail server error: {str(e)}")
+    
+#get lesson data, and lesson file path, go to the teach.html page
+@router.get("/lesson/{lesson_id}/teach", response_class=HTMLResponse)
+def teach_lesson(request: Request, lesson_id: UUID, db: Session = Depends(get_db)):
+    print(f"Fetching lesson for teaching with ID: {lesson_id}")
+    try:
+        # Call the existing endpoint function directly
+        lesson = obtener_leccion(lesson_id=lesson_id, db=db)
+
+        # Convert LessonOut model to dict for template
+        lesson_data = {
+            "id": str(lesson.id),
+            "name": lesson.nombre,
+            "subject": lesson.asignatura,
+            "course": lesson.curso,
+            "description": lesson.contexto,
+            "lesson_file_path": lesson.lesson_file_path
+        }
+
+        return templates.TemplateResponse("Teach.html", {
+            "request": request,
+            "lesson": lesson_data
+        })
+    except HTTPException as e:
+        raise e
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Internal server error: {str(e)}")
+    
+@router.get("/test", response_class=HTMLResponse)
+def test_page(request: Request):
+    """
+    Test page to verify that the frontend is working correctly.
+    """
+    return templates.TemplateResponse("Test.html", {"request": request})

@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>WebSocket Demo</title>
+</head>
+<body>
+    <h2>WebSocket Client</h2>
+    <label for="lessonId">Lesson ID:</label>
+    <input type="text" id="lessonId" value="demo123">
+    <button onclick="connect()">Connect</button>
+    <p><strong>Connection ID:</strong> <span id="connectionId">-</span></p>
+
+    <hr>
+
+    <h3>Send Action</h3>
+    <label for="desc">Description:</label>
+    <input type="text" id="desc" placeholder="e.g., What is AI?">
+    <button onclick="sendExplain()">Send 'Explain'</button>
+    <button onclick="sendMove('next')">Move Next</button>
+    <button onclick="sendMove('prev')">Move Prev</button>
+
+    <hr>
+
+    <h3>Messages</h3>
+    <pre id="messages" style="background:#eee; padding:10px; max-height:300px; overflow:auto;"></pre>
+
+    <script>
+        let socket;
+        let connectionId;
+
+        function connect() {
+            const lessonId = document.getElementById("lessonId").value;
+            const url = `ws://localhost:8000/ws/${lessonId}`; // Change to your host if different
+            socket = new WebSocket(url);
+
+            socket.onopen = () => {
+                log("Connected to WebSocket.");
+            };
+
+            socket.onmessage = (event) => {
+                const data = JSON.parse(event.data);
+                log("Received: " + JSON.stringify(data));
+                if (data.accion === "auth") {
+                    connectionId = data.contenido;
+                    document.getElementById("connectionId").textContent = connectionId;
+                }
+            };
+
+            socket.onerror = (error) => {
+                log("WebSocket error: " + error);
+            };
+
+            socket.onclose = () => {
+                log("WebSocket connection closed.");
+            };
+        }
+
+        function sendExplain() {
+            const desc = document.getElementById("desc").value;
+            if (!connectionId) return alert("Connect first!");
+            fetch(`/test_action_ws/${connectionId}?action=explain&desc=${encodeURIComponent(desc)}`, {
+                method: "POST"
+            }).then(res => res.json()).then(log);
+        }
+
+        function sendMove(direction) {
+            if (!connectionId) return alert("Connect first!");
+            fetch(`/test_action_ws/${connectionId}?action=move&desc=${direction}`, {
+                method: "POST"
+            }).then(res => res.json()).then(log);
+        }
+
+        function log(message) {
+            const messages = document.getElementById("messages");
+            messages.textContent += `[${new Date().toLocaleTimeString()}] ${JSON.stringify(message)}\n`;
+            messages.scrollTop = messages.scrollHeight;
+        }
+    </script>
+</body>
+</html>

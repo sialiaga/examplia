@@ -1,0 +1,461 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Teaching Mode - Examplia</title>
+
+  <!-- PDF.js -->
+  <script src="https://unpkg.com/pdfjs-dist@3.4.120/build/pdf.min.js"></script> 
+
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    html, body {
+      height: 100%;
+      background-color: #f5f5f5;
+      overflow: hidden;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+
+    .container {
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+    }
+
+    .header {
+      background-color: #0077cc;
+      color: white;
+      padding: 15px 20px;
+      text-align: center;
+      font-size: 24px;
+      font-weight: bold;
+      flex-shrink: 0;
+    }
+
+    .main {
+      flex: 1;
+      display: flex;
+      position: relative;
+    }
+
+    .slide-viewer {
+      flex: 1;
+      background-color: #fff;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      overflow: hidden;
+    }
+
+    canvas {
+      max-width: 95vw;
+      max-height: 95vh;
+      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+    }
+
+    .controls {
+      position: absolute;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 10;
+    }
+
+    .controls button {
+      background-color: rgba(0, 0, 0, 0.6);
+      color: white;
+      border: none;
+      padding: 12px 20px;
+      margin: 0 10px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-weight: bold;
+    }
+
+    .controls button:hover {
+      background-color: #0077cc;
+    }
+
+    .sidebar {
+      width: 300px;
+      background-color: white;
+      border-left: 1px solid #ccc;
+      display: flex;
+      flex-direction: column;
+      overflow-y: auto;
+    }
+
+    .sidebar-header {
+      padding: 15px;
+      background-color: #e6f2ff;
+      font-weight: bold;
+      border-bottom: 1px solid #ccc;
+      flex-shrink: 0;
+    }
+
+    .question-form {
+      padding: 10px;
+      border-bottom: 1px solid #ccc;
+      flex-shrink: 0;
+    }
+
+    .question-form input[type="text"] {
+      width: 100%;
+      padding: 10px;
+      border-radius: 6px;
+      border: 1px solid #ccc;
+      margin-bottom: 10px;
+    }
+
+    .question-form button {
+      width: 100%;
+      padding: 10px;
+      background-color: #0077cc;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-weight: bold;
+    }
+
+    .history {
+      flex: 1;
+      padding: 10px;
+      overflow-y: auto;
+    }
+
+    .history-item {
+      background-color: #f9f9f9;
+      padding: 10px;
+      margin-bottom: 10px;
+      border-radius: 6px;
+      cursor: pointer;
+      border: 1px solid #ddd;
+    }
+
+    .history-item:hover {
+      background-color: #e6f2ff;
+    }
+
+    /* Modal for viewing explanations */
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      top: 0; left: 0;
+      width: 100vw; height: 100vh;
+      background-color: rgba(0,0,0,0.9);
+      justify-content: center;
+      align-items: center;
+      z-index: 1000;
+    }
+
+    .modal-content {
+      background-color: white;
+      width: 90vw;
+      height: 85vh;
+      overflow: auto;
+      border-radius: 10px;
+      padding: 20px;
+      box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+      position: relative;
+    }
+
+    .close-modal {
+      position: absolute;
+      top: 10px;
+      right: 15px;
+      font-size: 24px;
+      font-weight: bold;
+      cursor: pointer;
+      color: #0077cc;
+      z-index: 1001;
+    }
+
+    .back-link {
+      display: inline-block;
+      margin: 10px 20px;
+      color: #0077cc;
+      text-decoration: none;
+    }
+
+    .back-link:hover {
+      text-decoration: underline;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <div class="header">🎓 Examplia - Teaching Mode</div>
+
+    <div class="main">
+      <!-- Slide Viewer -->
+      <div class="slide-viewer" id="slideViewer">
+        <p>Loading lesson slide...</p>
+      </div>
+
+      <!-- Controls -->
+      <div class="controls">
+        <button onclick="prevPage()">Previous</button>
+        <button onclick="nextPage()">Next</button>
+        <!--<button onclick="askForHelp()">Ask AI</button>-->
+      </div>
+
+      <!-- Sidebar -->
+      <div class="sidebar">
+        <div class="sidebar-header">Questions & Answers</div>
+        <div class="question-form">
+          <input type="text" id="questionInput" placeholder="Explain how..." />
+          <button onclick="askCustomQuestion()">Ask</button>
+        </div>
+        <div class="history" id="historyPanel"></div>
+      </div>
+    </div>
+
+    <a href="/frontend/lesson/{{ lesson.id }}" class="back-link">&larr; Back to Lesson</a>
+  </div>
+
+  <!-- Modal for AI Responses -->
+  <div class="modal-overlay" id="modalOverlay" onclick="closeModal()">
+    <span class="close-modal" onclick="closeModal()">&times;</span>
+    <div class="modal-content" id="modalContent"></div>
+  </div>
+
+  <script type="text/javascript">
+    const viewer = document.getElementById("slideViewer");
+    const modalOverlay = document.getElementById("modalOverlay");
+    const modalContent = document.getElementById("modalContent");
+    const historyPanel = document.getElementById("historyPanel");
+
+    let pdfDoc = null;
+    let currentPage = 1;
+    let wsConnectionId = null;
+
+    // Your custom renderPDF function
+    function renderPDF(url, canvasContainer, options) {
+      var options = options || { scale: 1.5 };
+
+      function renderPage(page) {
+        var viewport = page.getViewport(options.scale);
+        var canvas = document.createElement('canvas');
+        var ctx = canvas.getContext('2d');
+        var renderContext = {
+          canvasContext: ctx,
+          viewport: viewport
+        };
+
+        canvas.height = viewport.height;
+        canvas.width = viewport.width;
+        canvasContainer.appendChild(canvas);
+
+        page.render(renderContext);
+      }
+
+      pdfjsLib.getDocument(url).promise.then(function(pdf) {
+        pdfDoc = pdf;
+        currentPage = 1;
+        showCurrentPage();
+      });
+    }
+
+    async function showCurrentPage() {
+      if (!pdfDoc || currentPage < 1 || currentPage > pdfDoc.numPages) return;
+
+      viewer.innerHTML = "";
+      const page = await pdfDoc.getPage(currentPage);
+      const viewport = page.getViewport({ scale: 1.5 });
+
+      const canvas = document.createElement('canvas');
+      const ctx = canvas.getContext('2d');
+      canvas.height = viewport.height;
+      canvas.width = viewport.width;
+
+      const renderContext = {
+        canvasContext: ctx,
+        viewport: viewport
+      };
+
+      await page.render(renderContext).promise;
+      viewer.appendChild(canvas);
+    }
+
+    function prevPage() {
+      if (currentPage > 1) {
+        currentPage--;
+        showCurrentPage();
+      }
+    }
+
+    function nextPage() {
+      if (pdfDoc && currentPage < pdfDoc.numPages) {
+        currentPage++;
+        showCurrentPage();
+      }
+    }
+
+    // WebSocket connection
+    let socket;
+    let currentQuestion = "";
+
+    function connectToWebSocket() {
+      const lessonId = "{{ lesson.id }}";
+      const url = `ws://localhost:8000/ws/${lessonId}`;
+      socket = new WebSocket(url);
+
+      socket.onopen = () => {
+        console.log("Connected to WebSocket.");
+      };
+
+      socket.onmessage = (event) => {
+        const data = JSON.parse(event.data);
+
+        if (data.accion === "auth") {
+          wsConnectionId = data.contenido;
+          console.log("Connection ID:", wsConnectionId);
+        }
+
+        if (data.accion === "explain") {
+          showModal(`<p style="font-size:18px;">${data.contenido}</p>`);
+          addToHistory(currentQuestion, "text", data.contenido);
+          currentQuestion = "";
+        }
+
+        if (data.accion === "move") {
+          if (data.contenido === "next") {
+            nextPage();
+          } else if (data.contenido === "prev") {
+            prevPage();
+          }
+        }
+      };
+
+      socket.onerror = (error) => {
+        log(`WebSocket error: ${error}`);
+      };
+
+      socket.onclose = () => {
+        log("WebSocket closed.");
+      };
+    }
+
+    // funcion to close the WebSocket connection
+    function closeWebSocket() {
+      if (socket) {
+        socket.close();
+        console.log("WebSocket connection closed.");
+      }
+    }
+
+    // Send explain request
+    function sendExplain(desc) {
+      if (!wsConnectionId) {
+        alert("WebSocket not connected or no connection ID received yet.");
+        return;
+      }
+
+      fetch(`/test_action_ws/${wsConnectionId}?action=explain&desc=${encodeURIComponent(desc)}`, {
+        method: "POST"
+      })
+      .then(res => res.json())
+      .then(data => {
+        console.log("Sent explanation request:", data);
+      });
+    }
+
+    // Ask AI functions
+    function askForHelp() {
+      currentQuestion = "How does this concept work?";
+      sendExplain(currentQuestion);
+    }
+
+    function askCustomQuestion() {
+      const input = document.getElementById("questionInput");
+      const question = input.value.trim();
+
+      if (!question) {
+        alert("Please enter a question.");
+        return;
+      }
+
+      currentQuestion = question;
+      sendExplain(question);
+      input.value = "";
+    }
+
+    // Modal functions
+    function showModal(html) {
+      modalContent.innerHTML = html;
+      modalOverlay.style.display = "flex";
+    }
+
+    function closeModal() {
+      modalOverlay.style.display = "none";
+      modalContent.innerHTML = "";
+    }
+
+    // Add to history panel
+    function addToHistory(question, type, answer) {
+      const item = document.createElement("div");
+      item.className = "history-item";
+      item.textContent = question;
+      item.onclick = () => {
+        if (type === "text") {
+          showModal(`<p style="padding:20px; font-size:18px;">${answer}</p>`);
+        }
+      };
+      historyPanel.prepend(item);
+    }
+
+    // Load lesson slide from backend
+    async function loadLessonSlide() {
+      try {
+        const res = await fetch(`/lessons/{{ lesson.id }}/slide`);
+
+        if (!res.ok) {
+          viewer.innerHTML = "<p>No slide found.</p>";
+          return;
+        }
+
+        const data = await res.json();
+        const filePath = data.file_path;
+
+        if (!filePath || !filePath.endsWith(".pdf")) {
+          viewer.innerHTML = "<p>This feature only supports PDF files.</p>";
+          return;
+        }
+
+        viewer.innerHTML = "";
+        renderPDF(filePath, viewer, { scale: 1.5 });
+      } catch (err) {
+        console.error("Failed to load PDF:", err);
+        viewer.innerHTML = "<p>Could not load PDF. Check browser console.</p>";
+      }
+    }
+
+    window.onload = () => {
+      connectToWebSocket(); // Start WebSocket connection
+      loadLessonSlide();   // Load PDF
+    };
+
+    window.onbeforeunload = () => {
+      closeWebSocket(); // Close WebSocket on page unload
+    };
+
+    // Helper
+    function log(message) {
+      const messages = document.getElementById("messages");
+      if (messages) {
+        messages.textContent += `[${new Date().toLocaleTimeString()}] ${JSON.stringify(message)}\n`;
+        messages.scrollTop = messages.scrollHeight;
+      }
+    }
+  </script>
+
+</body>
+</html>
