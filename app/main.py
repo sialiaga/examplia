@@ -5,10 +5,19 @@ from .routers import lesson
 from .routers.telegram import telegram
 from .routers.websocket import websocket_router
 import os
+from dotenv import load_dotenv
+
 
 app = FastAPI()
 
+
+
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+CURRENT_DIR = os.path.dirname(os.path.abspath(__file__))
+
+#load_dotenv(os.path.join(CURRENT_DIR, ".env"))
+#
+#print("From main.py", os.getenv("PBKEY"))
 
 app.include_router(frontend.router)
 app.include_router(lesson.router)

@@ -209,11 +209,11 @@
 
       <!-- Sidebar -->
       <div class="sidebar">
-        <div class="sidebar-header">Questions & Answers</div>
-        <div class="question-form">
+        <div id="lesson-code" class="sidebar-header">Code: Establishing...</div>
+        <!--<div class="question-form">
           <input type="text" id="questionInput" placeholder="Explain how..." />
           <button onclick="askCustomQuestion()">Ask</button>
-        </div>
+        </div>-->
         <div class="history" id="historyPanel"></div>
       </div>
     </div>
@@ -318,11 +318,32 @@
         if (data.accion === "auth") {
           wsConnectionId = data.contenido;
           console.log("Connection ID:", wsConnectionId);
+          document.getElementById("lesson-code").textContent = `Code: ${wsConnectionId}`;
+          log(`WebSocket connected with ID: ${wsConnectionId}`);
         }
 
         if (data.accion === "explain") {
-          showModal(`<p style="font-size:18px;">${data.contenido}</p>`);
-          addToHistory(currentQuestion, "text", data.contenido);
+          console.log("Received explanation:", data);
+          showModal(`
+            <div style="display: flex; flex-direction: column; justify-content: center; align-items: center; height: 100%; overflow: auto;">
+              <img src="${data.image}" style="width: 100%; height: 80%; ...">
+              <div style="
+            flex: 1;
+            padding: 15px;
+            overflow-y: auto;
+            font-size: 16px;
+            color: #333;
+            border-top: 1px solid #ccc;
+          ">
+            ${Array.isArray(data.contenido)
+              ? data.contenido.map(text => `<p>${text}</p>`).join("")
+              : `<p>${data.text || "No explanation provided."}</p>`
+            }
+          </div>
+          `);
+          // const text that joins list of strings in data.contenido
+          const text = data.contenido.join(" ");
+          addToHistory(data.title, "image", {"image": data.image, "text": data.contenido});
           currentQuestion = "";
         }
 
@@ -408,6 +429,28 @@
         if (type === "text") {
           showModal(`<p style="padding:20px; font-size:18px;">${answer}</p>`);
         }
+        else if (type === "image") {
+          // Show image which is base64 encoded
+          //showModal(`<img src="data:image/png;base64, ${answer}" style="width:100%; max-height:80vh "/>`);
+          console.log("Info to show:", answer); 
+          showModal(`
+            <div style="display: flex; flex-direction: column; justify-content: center; align-items: center; height: 100%; overflow: auto;">
+              <img src="${answer.image}" style="width: 100%; height: 80%; ...">
+              <div style="
+            flex: 1;
+            padding: 15px;
+            overflow-y: auto;
+            font-size: 16px;
+            color: #333;
+            border-top: 1px solid #ccc;
+          ">
+            ${Array.isArray(answer.text)
+              ? answer.text.map(text => `<p>${text}</p>`).join("")
+              : `<p>${answer.text || "No explanation provided."}</p>`
+            }
+          </div>
+          `);
+        }
       };
       historyPanel.prepend(item);
     }
@@ -441,6 +484,7 @@
     window.onload = () => {
       connectToWebSocket(); // Start WebSocket connection
       loadLessonSlide();   // Load PDF
+      addToHistory("What is the main idea?", "image", {"image": "iVBORw0KGgoAAAANSUhEUgAAAQAAAAEACAIAAADTED8xAAADMElEQVR4nOzVwQnAIBQFQYXff81RUkQCOyDj1YOPnbXWPmeTRef+/3O/OyBjzh3CD95BfqICMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMK0CMO0TAAD//2Anhf4QtqobAAAAAElFTkSuQmCC", "text": ["This is a sample image."]});
     };
 
     window.onbeforeunload = () => {

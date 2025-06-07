@@ -6,12 +6,20 @@ import json
 
 import requests
 import os
+from dotenv import load_dotenv
+
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+load_dotenv(os.path.join(BASE_DIR, ".env"))
+
+pixabay_apikey = os.getenv("PBKEY")
+
+
 
 telegram = APIRouter()
-pixabay_apikey = os.getenv("pixabay_apikey")
 
 
 def obtener_link_pixabay(texto_busqueda: str, api_key: str) -> str:
+    print(pixabay_apikey)
     url_image_to_show = "https://i.pinimg.com/564x/85/f0/53/85f0533df9912c5bd700903a918930c8.jpg"
     
     api_url = "https://pixabay.com/api/"
